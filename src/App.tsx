@@ -56,7 +56,7 @@ export default function App() {
 
       <section className="sim-layout">
         <div className="canvas-shell">
-          <UniverseCanvas world={world} setWorld={setWorld} />
+          <UniverseCanvas setWorld={setWorld} />
         </div>
 
         <aside className="control-panel">

@@ -3,11 +3,10 @@ import type { WorldState } from "../sim/types";
 import { updateBodies } from "../sim/physics";
 
 type UniverseCanvasProps = {
-  world: WorldState;
   setWorld: React.Dispatch<React.SetStateAction<WorldState | null>>;
 };
 
-export function UniverseCanvas({ world, setWorld }: UniverseCanvasProps) {
+export function UniverseCanvas({ setWorld }: UniverseCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const lastTimeRef = useRef<number | null>(null);
