@@ -4,7 +4,7 @@ const G = 0.08;
 const SOFTENING = 25;
 
 export function updateBodies(bodies: Body[], dt: number): Body[] {
-  const updatedBodies = bodies.map((body) => ({
+  let updatedBodies = bodies.map((body) => ({
     ...body,
     position: { ...body.position },
     velocity: { ...body.velocity },
@@ -42,5 +42,83 @@ export function updateBodies(bodies: Body[], dt: number): Body[] {
     body.position.y += body.velocity.y * dt;
   }
 
+  updatedBodies = mergeCollidingBodies(updatedBodies);
+
   return updatedBodies;
+}
+
+function mergeCollidingBodies(bodies: Body[]): Body[] {
+  const remainingBodies = [...bodies];
+  let didMerge = true;
+
+  while (didMerge) {
+    didMerge = false;
+
+    for (let i = 0; i < remainingBodies.length; i++) {
+      for (let j = i + 1; j < remainingBodies.length; j++) {
+        const bodyA = remainingBodies[i];
+        const bodyB = remainingBodies[j];
+
+        if (areBodiesColliding(bodyA, bodyB)) {
+          const mergedBody = mergeBodies(bodyA, bodyB);
+
+          remainingBodies.splice(j, 1);
+          remainingBodies.splice(i, 1);
+          remainingBodies.push(mergedBody);
+
+          didMerge = true;
+          break;
+        }
+      }
+
+      if (didMerge) break;
+    }
+  }
+
+  return remainingBodies;
+}
+
+function areBodiesColliding(bodyA: Body, bodyB: Body): boolean {
+  const dx = bodyB.position.x - bodyA.position.x;
+  const dy = bodyB.position.y - bodyA.position.y;
+  const distance = Math.sqrt(dx * dx + dy * dy);
+
+  return distance <= bodyA.radius + bodyB.radius;
+}
+
+function mergeBodies(bodyA: Body, bodyB: Body): Body {
+  const totalMass = bodyA.mass + bodyB.mass;
+
+  const position = {
+    x:
+      (bodyA.position.x * bodyA.mass + bodyB.position.x * bodyB.mass) /
+      totalMass,
+    y:
+      (bodyA.position.y * bodyA.mass + bodyB.position.y * bodyB.mass) /
+      totalMass,
+  };
+
+  const velocity = {
+    x:
+      (bodyA.velocity.x * bodyA.mass + bodyB.velocity.x * bodyB.mass) /
+      totalMass,
+    y:
+      (bodyA.velocity.y * bodyA.mass + bodyB.velocity.y * bodyB.mass) /
+      totalMass,
+  };
+
+  const radius = Math.sqrt(
+    bodyA.radius * bodyA.radius + bodyB.radius * bodyB.radius,
+  );
+
+  const largerBody = bodyA.mass >= bodyB.mass ? bodyA : bodyB;
+
+  return {
+    id: `${largerBody.id}+merged`,
+    position,
+    velocity,
+    mass: totalMass,
+    radius,
+    color: largerBody.color,
+  };
 }

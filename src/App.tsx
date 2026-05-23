@@ -46,11 +46,11 @@ export default function App() {
   return (
     <main className="page">
       <section className="hero">
-        <p className="eyebrow">WorldSim / Genesis Build 001</p>
-        <h1>First Universe Loop</h1>
+        <p className="eyebrow">WorldSim / Genesis Build 002</p>
+        <h1>Collision and Merging</h1>
         <p>
-          Bodies exist in space, move through time, and pull on each other with
-          gravity.
+          Bodies exist in space, move through time, pull on each other with
+          gravity, and merge when they collide.
         </p>
       </section>
 
@@ -61,6 +61,8 @@ export default function App() {
 
         <aside className="control-panel">
           <h2>Controls</h2>
+
+          <p className="stat-line">Body Count: {world.bodies.length}</p>
 
           <button onClick={togglePause}>
             {world.isPaused ? "Resume Time" : "Pause Time"}

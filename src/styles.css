@@ -94,6 +94,12 @@ canvas {
   margin-top: 0;
 }
 
+.stat-line {
+  margin: 0 0 14px;
+  color: #c9c2e8;
+  font-size: 0.9rem;
+}
+
 button {
   width: 100%;
   margin-bottom: 12px;

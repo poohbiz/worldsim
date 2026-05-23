@@ -29,6 +29,22 @@ export function createInitialWorld(width: number, height: number): WorldState {
         radius: 9,
         color: "#b388ff",
       },
+      {
+        id: "asteroid-a",
+        position: { x: width / 2 + 330, y: height / 2 - 160 },
+        velocity: { x: 0.7, y: 1.15 },
+        mass: 4,
+        radius: 5,
+        color: "#d6d0c4",
+      },
+      {
+        id: "asteroid-b",
+        position: { x: width / 2 + 360, y: height / 2 - 135 },
+        velocity: { x: -0.6, y: 0.85 },
+        mass: 3,
+        radius: 4,
+        color: "#aaa49a",
+      },
     ],
   };
 }

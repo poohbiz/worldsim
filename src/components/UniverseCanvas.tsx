@@ -78,7 +78,13 @@ function render(
     context.fill();
 
     context.beginPath();
-    context.arc(body.position.x, body.position.y, body.radius, 0, Math.PI * 2);
+    context.arc(
+      body.position.x,
+      body.position.y,
+      body.radius * 2.2,
+      0,
+      Math.PI * 2,
+    );
     context.strokeStyle = `${body.color}55`;
     context.stroke();
   }
