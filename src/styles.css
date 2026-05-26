@@ -123,6 +123,37 @@ input[type="range"] {
   width: 100%;
 }
 
+.selected-body-panel {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 22px;
+  padding: 12px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.selected-body-panel h3 {
+  margin: 0;
+}
+
+.selected-body-panel p {
+  margin: 0;
+  color: #c9c2e8;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.selected-body-details {
+  display: grid;
+  gap: 5px;
+  color: #cfc8ef;
+  font-size: 0.85rem;
+}
+
+.selected-body-details strong {
+  color: white;
+}
+
 .body-list {
   display: grid;
   gap: 10px;
@@ -131,11 +162,26 @@ input[type="range"] {
 .body-card {
   display: grid;
   gap: 4px;
+  width: 100%;
+  margin: 0;
   padding: 10px;
+  border: 1px solid transparent;
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.06);
   color: #cfc8ef;
   font-size: 0.85rem;
+  text-align: left;
+  cursor: pointer;
+  font-weight: 400;
+}
+
+.body-card:hover {
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.body-card-selected {
+  border-color: rgba(255, 255, 255, 0.65);
+  background: rgba(111, 76, 255, 0.22);
 }
 
 .body-card strong {

@@ -1,15 +1,55 @@
-import { useEffect, useRef } from "react";
+import {
+  useEffect,
+  useRef,
+  type Dispatch,
+  type MouseEvent,
+  type SetStateAction,
+} from "react";
 import type { WorldState } from "../sim/types";
 import { updateBodies } from "../sim/physics";
 
 type UniverseCanvasProps = {
-  setWorld: React.Dispatch<React.SetStateAction<WorldState | null>>;
+  world: WorldState;
+  setWorld: Dispatch<SetStateAction<WorldState | null>>;
+  selectedBodyId: string | null;
+  onSelectBody: (bodyId: string | null) => void;
 };
 
-export function UniverseCanvas({ setWorld }: UniverseCanvasProps) {
+export function UniverseCanvas({
+  world,
+  setWorld,
+  selectedBodyId,
+  onSelectBody,
+}: UniverseCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const lastTimeRef = useRef<number | null>(null);
+  const worldRef = useRef<WorldState>(world);
+  const selectedBodyIdRef = useRef<string | null>(selectedBodyId);
+
+  worldRef.current = world;
+  selectedBodyIdRef.current = selectedBodyId;
+
+  function handleCanvasClick(event: MouseEvent<HTMLCanvasElement>) {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+
+    const clickX = (event.clientX - rect.left) * scaleX;
+    const clickY = (event.clientY - rect.top) * scaleY;
+
+    const clickedBody = findClickedBody(
+      worldRef.current.bodies,
+      clickX,
+      clickY,
+    );
+
+    onSelectBody(clickedBody ? clickedBody.id : null);
+  }
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -39,7 +79,7 @@ export function UniverseCanvas({ setWorld }: UniverseCanvasProps) {
           bodies: nextBodies,
         };
 
-        render(context, canvas, nextWorld);
+        render(context, canvas, nextWorld, selectedBodyIdRef.current);
 
         return nextWorld;
       });
@@ -56,13 +96,21 @@ export function UniverseCanvas({ setWorld }: UniverseCanvasProps) {
     };
   }, [setWorld]);
 
-  return <canvas ref={canvasRef} width={900} height={600} />;
+  return (
+    <canvas
+      ref={canvasRef}
+      width={900}
+      height={600}
+      onClick={handleCanvasClick}
+    />
+  );
 }
 
 function render(
   context: CanvasRenderingContext2D,
   canvas: HTMLCanvasElement,
   world: WorldState,
+  selectedBodyId: string | null,
 ) {
   context.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -87,6 +135,21 @@ function render(
     );
     context.strokeStyle = `${body.color}55`;
     context.stroke();
+
+    if (body.id === selectedBodyId) {
+      context.beginPath();
+      context.arc(
+        body.position.x,
+        body.position.y,
+        body.radius * 3.1,
+        0,
+        Math.PI * 2,
+      );
+      context.strokeStyle = "rgba(255, 255, 255, 0.8)";
+      context.lineWidth = 2;
+      context.stroke();
+      context.lineWidth = 1;
+    }
   }
 }
 
@@ -112,4 +175,26 @@ function drawGrid(
     context.lineTo(canvas.width, y);
     context.stroke();
   }
+}
+
+function findClickedBody(
+  bodies: WorldState["bodies"],
+  clickX: number,
+  clickY: number,
+) {
+  for (let i = bodies.length - 1; i >= 0; i--) {
+    const body = bodies[i];
+
+    const dx = clickX - body.position.x;
+    const dy = clickY - body.position.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    const clickableRadius = Math.max(body.radius * 2.2, 10);
+
+    if (distance <= clickableRadius) {
+      return body;
+    }
+  }
+
+  return null;
 }
