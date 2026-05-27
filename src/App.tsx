@@ -1,10 +1,47 @@
 import { useEffect, useState } from "react";
 import { UniverseCanvas } from "./components/UniverseCanvas";
 import { createInitialWorld } from "./sim/createWorld";
-import type { WorldState } from "./sim/types";
+import type { Body, WorldState } from "./sim/types";
 
 const CANVAS_WIDTH = 900;
 const CANVAS_HEIGHT = 600;
+const ASTEROID_COLORS = ["#d6d0c4", "#aaa49a", "#c7b7a3", "#8f8a84"];
+
+function createSpawnedAsteroid(id: string): Body {
+  const centerX = CANVAS_WIDTH / 2;
+  const centerY = CANVAS_HEIGHT / 2;
+
+  const angle = Math.random() * Math.PI * 2;
+  const distanceFromCenter = 260 + Math.random() * 160;
+
+  const position = {
+    x: centerX + Math.cos(angle) * distanceFromCenter,
+    y: centerY + Math.sin(angle) * distanceFromCenter,
+  };
+
+  const direction = Math.random() > 0.5 ? 1 : -1;
+  const speed = 1.2 + Math.random() * 1.3;
+
+  const velocity = {
+    x: -Math.sin(angle) * speed * direction,
+    y: Math.cos(angle) * speed * direction,
+  };
+
+  const mass = 2 + Math.random() * 6;
+  const radius = Math.sqrt(mass) * 2.2;
+
+  const color =
+    ASTEROID_COLORS[Math.floor(Math.random() * ASTEROID_COLORS.length)];
+
+  return {
+    id,
+    position,
+    velocity,
+    mass,
+    radius,
+    color,
+  };
+}
 
 export default function App() {
   const [world, setWorld] = useState<WorldState | null>(null);
@@ -53,6 +90,23 @@ export default function App() {
     });
   }
 
+  function spawnAsteroid() {
+    const asteroidId = `asteroid-${Date.now()}`;
+
+    setWorld((currentWorld) => {
+      if (!currentWorld) return currentWorld;
+
+      const asteroid = createSpawnedAsteroid(asteroidId);
+
+      return {
+        ...currentWorld,
+        bodies: [...currentWorld.bodies, asteroid],
+      };
+    });
+
+    setSelectedBodyId(asteroidId);
+  }
+
   const selectedBody =
     world?.bodies.find((body) => body.id === selectedBodyId) ?? null;
 
@@ -69,11 +123,11 @@ export default function App() {
   return (
     <main className="page">
       <section className="hero">
-        <p className="eyebrow">WorldSim / Genesis Build 003</p>
-        <h1>Collision and Merging</h1>
+        <p className="eyebrow">WorldSim / Genesis Build 004</p>
+        <h1>Asteroid Spawning</h1>
         <p>
-          Bodies move, collide, merge, and can now be selected for live
-          inspection.
+          Bodies move, collide, merge, can be selected for live inspection, and
+          new asteroids can now be spawned into the system.
         </p>
       </section>
 
@@ -95,6 +149,8 @@ export default function App() {
           <button onClick={togglePause}>
             {world.isPaused ? "Resume Time" : "Pause Time"}
           </button>
+
+          <button onClick={spawnAsteroid}>Spawn Asteroid</button>
 
           <button onClick={resetWorld}>Reset Universe</button>
 

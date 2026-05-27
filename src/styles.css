@@ -81,6 +81,8 @@ canvas {
   display: block;
   width: 100%;
   border-radius: 16px;
+  tough-action: none;
+  cursor: crosshair;
 }
 
 .control-panel {

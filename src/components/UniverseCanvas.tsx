@@ -2,7 +2,7 @@ import {
   useEffect,
   useRef,
   type Dispatch,
-  type MouseEvent,
+  type PointerEvent,
   type SetStateAction,
 } from "react";
 import type { WorldState } from "../sim/types";
@@ -30,7 +30,7 @@ export function UniverseCanvas({
   worldRef.current = world;
   selectedBodyIdRef.current = selectedBodyId;
 
-  function handleCanvasClick(event: MouseEvent<HTMLCanvasElement>) {
+  function handleCanvasPointerDown(event: PointerEvent<HTMLCanvasElement>) {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -101,7 +101,7 @@ export function UniverseCanvas({
       ref={canvasRef}
       width={900}
       height={600}
-      onClick={handleCanvasClick}
+      onPointerDown={handleCanvasPointerDown}
     />
   );
 }
@@ -141,7 +141,7 @@ function render(
       context.arc(
         body.position.x,
         body.position.y,
-        body.radius * 3.1,
+        Math.max(body.radius * 3.1, 18),
         0,
         Math.PI * 2,
       );
@@ -189,7 +189,7 @@ function findClickedBody(
     const dy = clickY - body.position.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
 
-    const clickableRadius = Math.max(body.radius * 2.2, 10);
+    const clickableRadius = Math.max(body.radius * 4, 32);
 
     if (distance <= clickableRadius) {
       return body;
