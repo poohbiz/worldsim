@@ -10,10 +10,12 @@ export type Body = {
   mass: number;
   radius: number;
   color: string;
+  trail: Vector2[];
 };
 
 export type WorldState = {
   bodies: Body[];
   timeScale: number;
   isPaused: boolean;
+  showTrails: boolean;
 };

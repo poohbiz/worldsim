@@ -40,6 +40,7 @@ function createSpawnedAsteroid(id: string): Body {
     mass,
     radius,
     color,
+    trail: [],
   };
 }
 
@@ -75,6 +76,17 @@ export default function App() {
       return {
         ...currentWorld,
         isPaused: !currentWorld.isPaused,
+      };
+    });
+  }
+
+  function toggleTrails() {
+    setWorld((currentWorld) => {
+      if (!currentWorld) return currentWorld;
+
+      return {
+        ...currentWorld,
+        showTrails: !currentWorld.showTrails,
       };
     });
   }
@@ -123,11 +135,11 @@ export default function App() {
   return (
     <main className="page">
       <section className="hero">
-        <p className="eyebrow">WorldSim / Genesis Build 004</p>
-        <h1>Asteroid Spawning</h1>
+        <p className="eyebrow">WorldSim / Genesis Build 005</p>
+        <h1>Orbital Trails</h1>
         <p>
           Bodies move, collide, merge, can be selected for live inspection, and
-          new asteroids can now be spawned into the system.
+          now leave trails that reveal their motion through time.
         </p>
       </section>
 
@@ -151,6 +163,10 @@ export default function App() {
           </button>
 
           <button onClick={spawnAsteroid}>Spawn Asteroid</button>
+
+          <button onClick={toggleTrails}>
+            {world.showTrails ? "Hide Trails" : "Show Trails"}
+          </button>
 
           <button onClick={resetWorld}>Reset Universe</button>
 

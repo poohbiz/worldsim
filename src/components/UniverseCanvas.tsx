@@ -119,6 +119,10 @@ function render(
 
   drawGrid(context, canvas);
 
+  if (world.showTrails) {
+    drawTrails(context, world);
+  }
+
   for (const body of world.bodies) {
     context.beginPath();
     context.arc(body.position.x, body.position.y, body.radius, 0, Math.PI * 2);
@@ -150,6 +154,29 @@ function render(
       context.stroke();
       context.lineWidth = 1;
     }
+  }
+}
+
+function drawTrails(context: CanvasRenderingContext2D, world: WorldState) {
+  for (const body of world.bodies) {
+    if (body.trail.length < 2) continue;
+
+    context.beginPath();
+
+    for (let i = 0; i < body.trail.length; i++) {
+      const point = body.trail[i];
+
+      if (i === 0) {
+        context.moveTo(point.x, point.y);
+      } else {
+        context.lineTo(point.x, point.y);
+      }
+    }
+
+    context.strokeStyle = `{body.color}66`;
+    context.lineWidth = Math.max(body.radius * 0.35, 1);
+    context.stroke();
+    context.lineWidth = 1;
   }
 }
 

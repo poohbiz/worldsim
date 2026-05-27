@@ -4,6 +4,7 @@ export function createInitialWorld(width: number, height: number): WorldState {
   return {
     isPaused: false,
     timeScale: 1,
+    showTrails: true,
     bodies: [
       {
         id: "star",
@@ -12,6 +13,7 @@ export function createInitialWorld(width: number, height: number): WorldState {
         mass: 10000,
         radius: 18,
         color: "#f5c542",
+        trail: [],
       },
       {
         id: "planet-1",
@@ -20,6 +22,7 @@ export function createInitialWorld(width: number, height: number): WorldState {
         mass: 10,
         radius: 7,
         color: "#5aa9ff",
+        trail: [],
       },
       {
         id: "planet-2",
@@ -28,6 +31,7 @@ export function createInitialWorld(width: number, height: number): WorldState {
         mass: 20,
         radius: 9,
         color: "#b388ff",
+        trail: [],
       },
       {
         id: "asteroid-a",
@@ -36,6 +40,7 @@ export function createInitialWorld(width: number, height: number): WorldState {
         mass: 4,
         radius: 5,
         color: "#d6d0c4",
+        trail: [],
       },
       {
         id: "asteroid-b",
@@ -44,6 +49,7 @@ export function createInitialWorld(width: number, height: number): WorldState {
         mass: 3,
         radius: 4,
         color: "#aaa49a",
+        trail: [],
       },
     ],
   };

@@ -2,12 +2,14 @@ import type { Body } from "./types";
 
 const G = 0.08;
 const SOFTENING = 25;
+const MAX_TRAIL_LENGTH = 120;
 
 export function updateBodies(bodies: Body[], dt: number): Body[] {
   let updatedBodies = bodies.map((body) => ({
     ...body,
     position: { ...body.position },
     velocity: { ...body.velocity },
+    trail: [...body.trail],
   }));
 
   for (let i = 0; i < updatedBodies.length; i++) {
@@ -40,6 +42,12 @@ export function updateBodies(bodies: Body[], dt: number): Body[] {
   for (const body of updatedBodies) {
     body.position.x += body.velocity.x * dt;
     body.position.y += body.velocity.y * dt;
+
+    body.trail.push({ ...body.position });
+
+    if (body.trail.length > MAX_TRAIL_LENGTH) {
+      body.trail.shift();
+    }
   }
 
   updatedBodies = mergeCollidingBodies(updatedBodies);
@@ -112,6 +120,7 @@ function mergeBodies(bodyA: Body, bodyB: Body): Body {
   );
 
   const largerBody = bodyA.mass >= bodyB.mass ? bodyA : bodyB;
+  const trail = [...largerBody.trail, position].slice(-MAX_TRAIL_LENGTH);
 
   return {
     id: `${largerBody.id}+merged`,
@@ -120,5 +129,6 @@ function mergeBodies(bodyA: Body, bodyB: Body): Body {
     mass: totalMass,
     radius,
     color: largerBody.color,
+    trail,
   };
 }
