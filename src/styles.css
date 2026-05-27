@@ -81,7 +81,7 @@ canvas {
   display: block;
   width: 100%;
   border-radius: 16px;
-  tough-action: none;
+  touch-action: none;
   cursor: crosshair;
 }
 
