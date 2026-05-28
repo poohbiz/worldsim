@@ -123,7 +123,7 @@ function mergeBodies(bodyA: Body, bodyB: Body): Body {
   const trail = [...largerBody.trail, position].slice(-MAX_TRAIL_LENGTH);
 
   return {
-    id: `${largerBody.id}+merged`,
+    id: createMergedId(largerBody, totalMass),
     position,
     velocity,
     mass: totalMass,
@@ -131,4 +131,13 @@ function mergeBodies(bodyA: Body, bodyB: Body): Body {
     color: largerBody.color,
     trail,
   };
+}
+
+function getBaseId(id: string): string {
+  return id.split("+")[0];
+}
+
+function createMergedId(largerBody: Body, totalMass: number): string {
+  const baseId = getBaseId(largerBody.id);
+  return `${baseId}+m${Math.round(totalMass)}`;
 }

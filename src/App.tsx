@@ -177,6 +177,44 @@ export default function App() {
     });
   }
 
+  function deleteSelectedBody() {
+    if (!selectedBodyId) return;
+
+    setWorld((currentWorld) => {
+      if (!currentWorld) return currentWorld;
+
+      return {
+        ...currentWorld,
+        bodies: currentWorld.bodies.filter(
+          (body) => body.id !== selectedBodyId,
+        ),
+      };
+    });
+
+    setSelectedBodyId(null);
+  }
+
+  function clearAsteroids() {
+    setWorld((currentWorld) => {
+      if (!currentWorld) return currentWorld;
+
+      return {
+        ...currentWorld,
+        bodies: currentWorld.bodies.filter(
+          (body) => !body.id.startsWith("asteroid"),
+        ),
+      };
+    });
+
+    setSelectedBodyId((currentSelectedBodyId) => {
+      if (!currentSelectedBodyId) return null;
+
+      return currentSelectedBodyId.startsWith("asteroid")
+        ? null
+        : currentSelectedBodyId;
+    });
+  }
+
   function changeTimeScale(value: number) {
     setWorld((currentWorld) => {
       if (!currentWorld) return currentWorld;
@@ -221,11 +259,11 @@ export default function App() {
   return (
     <main className="page">
       <section className="hero">
-        <p className="eyebrow">WorldSim / Genesis Build 006</p>
-        <h1>Spawn Modes</h1>
+        <p className="eyebrow">WorldSim / Genesis Build 007</p>
+        <h1>Sandbox Controls</h1>
         <p>
-          Bodies move, collide, merge, leave trails, and can now be spawned in
-          different modes for more intentional sandbox experiments.
+          Bodies move, collide, merge, leave trails, can be spawned in different
+          modes, and can now be removed from the sandbox.
         </p>
       </section>
 
@@ -263,6 +301,12 @@ export default function App() {
           </label>
 
           <button onClick={spawnBody}>Spawn Body</button>
+
+          <button onClick={deleteSelectedBody} disabled={!selectedBody}>
+            Delete Selected Body
+          </button>
+
+          <button onClick={clearAsteroids}>Clear Asteroids</button>
 
           <button onClick={toggleTrails}>
             {world.showTrails ? "Hide Trails" : "Show Trails"}
