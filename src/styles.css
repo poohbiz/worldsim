@@ -16,7 +16,8 @@ body {
 }
 
 button,
-input {
+input,
+select {
   font: inherit;
 }
 
@@ -123,6 +124,15 @@ label {
 
 input[type="range"] {
   width: 100%;
+}
+
+select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  color: #f4f1ff;
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .selected-body-panel {

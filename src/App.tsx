@@ -3,16 +3,35 @@ import { UniverseCanvas } from "./components/UniverseCanvas";
 import { createInitialWorld } from "./sim/createWorld";
 import type { Body, WorldState } from "./sim/types";
 
+type SpawnMode = "asteroid" | "orbiting-body" | "heavy-body";
+
 const CANVAS_WIDTH = 900;
 const CANVAS_HEIGHT = 600;
 const ASTEROID_COLORS = ["#d6d0c4", "#aaa49a", "#c7b7a3", "#8f8a84"];
+const ORBITING_BODY_COLORS = ["#5aa9ff", "#4fd1c5", "#7dd3fc", "#93c5fd"];
+const HEAVY_BODY_COLORS = ["#f5c542", "#ff8f70", "#f97316", "#facc15"];
+
+function pickRandomColor(colors: string[]): string {
+  return colors[Math.floor(Math.random() * colors.length)];
+}
+
+function createTangentialVelocity(
+  angle: number,
+  speed: number,
+  direction: 1 | -1,
+) {
+  return {
+    x: -Math.sin(angle) * speed * direction,
+    y: Math.cos(angle) * speed * direction,
+  };
+}
 
 function createSpawnedAsteroid(id: string): Body {
   const centerX = CANVAS_WIDTH / 2;
   const centerY = CANVAS_HEIGHT / 2;
 
   const angle = Math.random() * Math.PI * 2;
-  const distanceFromCenter = 260 + Math.random() * 160;
+  const distanceFromCenter = 260 + Math.random() * 180;
 
   const position = {
     x: centerX + Math.cos(angle) * distanceFromCenter,
@@ -20,18 +39,12 @@ function createSpawnedAsteroid(id: string): Body {
   };
 
   const direction = Math.random() > 0.5 ? 1 : -1;
-  const speed = 1.2 + Math.random() * 1.3;
+  const speed = 1.2 + Math.random() * 1.5;
 
-  const velocity = {
-    x: -Math.sin(angle) * speed * direction,
-    y: Math.cos(angle) * speed * direction,
-  };
+  const velocity = createTangentialVelocity(angle, speed, direction);
 
   const mass = 2 + Math.random() * 6;
   const radius = Math.sqrt(mass) * 2.2;
-
-  const color =
-    ASTEROID_COLORS[Math.floor(Math.random() * ASTEROID_COLORS.length)];
 
   return {
     id,
@@ -39,14 +52,87 @@ function createSpawnedAsteroid(id: string): Body {
     velocity,
     mass,
     radius,
-    color,
+    color: pickRandomColor(ASTEROID_COLORS),
     trail: [],
   };
+}
+
+function createSpawnedOrbitingBody(id: string): Body {
+  const centerX = CANVAS_WIDTH / 2;
+  const centerY = CANVAS_HEIGHT / 2;
+
+  const angle = Math.random() * Math.PI * 2;
+  const distanceFromCenter = 170 + Math.random() * 170;
+
+  const position = {
+    x: centerX + Math.cos(angle) * distanceFromCenter,
+    y: centerY + Math.sin(angle) * distanceFromCenter,
+  };
+
+  const direction = Math.random() > 0.5 ? 1 : -1;
+  const speed = 2.0 + Math.random() * 1.0;
+  const velocity = createTangentialVelocity(angle, speed, direction);
+
+  const mass = 8 + Math.random() * 18;
+  const radius = Math.sqrt(mass) * 2.4;
+
+  return {
+    id,
+    position,
+    velocity,
+    mass,
+    radius,
+    color: pickRandomColor(ORBITING_BODY_COLORS),
+    trail: [],
+  };
+}
+
+function createSpawnedHeavyBody(id: string): Body {
+  const centerX = CANVAS_WIDTH / 2;
+  const centerY = CANVAS_HEIGHT / 2;
+
+  const angle = Math.random() * Math.PI * 2;
+  const distanceFromCenter = 300 + Math.random() * 160;
+
+  const position = {
+    x: centerX + Math.cos(angle) * distanceFromCenter,
+    y: centerY + Math.sin(angle) * distanceFromCenter,
+  };
+
+  const direction = Math.random() > 0.5 ? 1 : -1;
+  const speed = 0.7 + Math.random() * 0.8;
+  const velocity = createTangentialVelocity(angle, speed, direction);
+
+  const mass = 80 + Math.random() * 120;
+  const radius = Math.sqrt(mass) * 1.8;
+
+  return {
+    id,
+    position,
+    velocity,
+    mass,
+    radius,
+    color: pickRandomColor(HEAVY_BODY_COLORS),
+    trail: [],
+  };
+}
+
+function createBodyForSpawnMode(mode: SpawnMode, id: string): Body {
+  if (mode === "orbiting-body") {
+    return createSpawnedOrbitingBody(id);
+  }
+
+  if (mode === "heavy-body") {
+    return createSpawnedHeavyBody(id);
+  }
+
+  return createSpawnedAsteroid(id);
 }
 
 export default function App() {
   const [world, setWorld] = useState<WorldState | null>(null);
   const [selectedBodyId, setSelectedBodyId] = useState<string | null>(null);
+  const [spawnMode, setSpawnMode] = useState<SpawnMode>("asteroid");
 
   useEffect(() => {
     setWorld(createInitialWorld(CANVAS_WIDTH, CANVAS_HEIGHT));
@@ -102,21 +188,21 @@ export default function App() {
     });
   }
 
-  function spawnAsteroid() {
-    const asteroidId = `asteroid-${Date.now()}`;
+  function spawnBody() {
+    const bodyId = `${spawnMode}-${Date.now()}`;
 
     setWorld((currentWorld) => {
       if (!currentWorld) return currentWorld;
 
-      const asteroid = createSpawnedAsteroid(asteroidId);
+      const body = createBodyForSpawnMode(spawnMode, bodyId);
 
       return {
         ...currentWorld,
-        bodies: [...currentWorld.bodies, asteroid],
+        bodies: [...currentWorld.bodies, body],
       };
     });
 
-    setSelectedBodyId(asteroidId);
+    setSelectedBodyId(bodyId);
   }
 
   const selectedBody =
@@ -135,11 +221,11 @@ export default function App() {
   return (
     <main className="page">
       <section className="hero">
-        <p className="eyebrow">WorldSim / Genesis Build 005</p>
-        <h1>Orbital Trails</h1>
+        <p className="eyebrow">WorldSim / Genesis Build 006</p>
+        <h1>Spawn Modes</h1>
         <p>
-          Bodies move, collide, merge, can be selected for live inspection, and
-          now leave trails that reveal their motion through time.
+          Bodies move, collide, merge, leave trails, and can now be spawned in
+          different modes for more intentional sandbox experiments.
         </p>
       </section>
 
@@ -162,7 +248,21 @@ export default function App() {
             {world.isPaused ? "Resume Time" : "Pause Time"}
           </button>
 
-          <button onClick={spawnAsteroid}>Spawn Asteroid</button>
+          <label>
+            Spawn Mode
+            <select
+              value={spawnMode}
+              onChange={(event) =>
+                setSpawnMode(event.target.value as SpawnMode)
+              }
+            >
+              <option value="asteroid">Asteroid</option>
+              <option value="orbiting-body">Orbiting Body</option>
+              <option value="heavy-body">Heavy Body</option>
+            </select>
+          </label>
+
+          <button onClick={spawnBody}>Spawn Body</button>
 
           <button onClick={toggleTrails}>
             {world.showTrails ? "Hide Trails" : "Show Trails"}

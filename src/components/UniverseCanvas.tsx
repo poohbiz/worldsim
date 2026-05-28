@@ -173,7 +173,7 @@ function drawTrails(context: CanvasRenderingContext2D, world: WorldState) {
       }
     }
 
-    context.strokeStyle = `{body.color}66`;
+    context.strokeStyle = `${body.color}66`;
     context.lineWidth = Math.max(body.radius * 0.35, 1);
     context.stroke();
     context.lineWidth = 1;
