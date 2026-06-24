@@ -2,12 +2,17 @@ import type { WorldState } from "./types";
 
 export function createInitialWorld(width: number, height: number): WorldState {
   return {
+    id: "genesis-system",
+    name: "Genesis System",
+    scale: "star-system",
     isPaused: false,
     timeScale: 1,
     showTrails: true,
     bodies: [
       {
         id: "star",
+        name: "Central Star",
+        kind: "star",
         position: { x: width / 2, y: height / 2 },
         velocity: { x: 0, y: 0 },
         mass: 10000,
@@ -17,6 +22,8 @@ export function createInitialWorld(width: number, height: number): WorldState {
       },
       {
         id: "planet-1",
+        name: "Blue Planet",
+        kind: "planet",
         position: { x: width / 2 + 140, y: height / 2 },
         velocity: { x: 0, y: 2.7 },
         mass: 10,
@@ -26,6 +33,8 @@ export function createInitialWorld(width: number, height: number): WorldState {
       },
       {
         id: "planet-2",
+        name: "Violet Planet",
+        kind: "planet",
         position: { x: width / 2 - 220, y: height / 2 },
         velocity: { x: 0, y: -2.1 },
         mass: 20,
@@ -35,6 +44,8 @@ export function createInitialWorld(width: number, height: number): WorldState {
       },
       {
         id: "asteroid-a",
+        name: "Asteroid A",
+        kind: "asteroid",
         position: { x: width / 2 + 330, y: height / 2 - 160 },
         velocity: { x: 0.7, y: 1.15 },
         mass: 4,
@@ -44,6 +55,8 @@ export function createInitialWorld(width: number, height: number): WorldState {
       },
       {
         id: "asteroid-b",
+        name: "Asteroid B",
+        kind: "asteroid",
         position: { x: width / 2 + 360, y: height / 2 - 135 },
         velocity: { x: -0.6, y: 0.85 },
         mass: 3,

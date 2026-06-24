@@ -124,6 +124,8 @@ function mergeBodies(bodyA: Body, bodyB: Body): Body {
 
   return {
     id: createMergedId(largerBody, totalMass),
+    name: createMergedName(largerBody, totalMass),
+    kind: largerBody.kind,
     position,
     velocity,
     mass: totalMass,
@@ -140,4 +142,8 @@ function getBaseId(id: string): string {
 function createMergedId(largerBody: Body, totalMass: number): string {
   const baseId = getBaseId(largerBody.id);
   return `${baseId}+m${Math.round(totalMass)}`;
+}
+
+function createMergedName(largerBody: Body, totalMass: number): string {
+  return `${largerBody.name} Merged ${Math.round(totalMass)}`;
 }

@@ -1,133 +1,18 @@
 import { useEffect, useState } from "react";
 import { UniverseCanvas } from "./components/UniverseCanvas";
 import { createInitialWorld } from "./sim/createWorld";
-import type { Body, WorldState } from "./sim/types";
-
-type SpawnMode = "asteroid" | "orbiting-body" | "heavy-body";
+import {
+  getAverageSpeed,
+  getBodySpeed,
+  getFastestBody,
+  getHeaviestBody,
+  getTotalMass,
+} from "./sim/selectors";
+import { createBodyForSpawnMode, type SpawnMode } from "./sim/spawnBodies";
+import type { WorldState } from "./sim/types";
 
 const CANVAS_WIDTH = 900;
 const CANVAS_HEIGHT = 600;
-const ASTEROID_COLORS = ["#d6d0c4", "#aaa49a", "#c7b7a3", "#8f8a84"];
-const ORBITING_BODY_COLORS = ["#5aa9ff", "#4fd1c5", "#7dd3fc", "#93c5fd"];
-const HEAVY_BODY_COLORS = ["#f5c542", "#ff8f70", "#f97316", "#facc15"];
-
-function pickRandomColor(colors: string[]): string {
-  return colors[Math.floor(Math.random() * colors.length)];
-}
-
-function createTangentialVelocity(
-  angle: number,
-  speed: number,
-  direction: 1 | -1,
-) {
-  return {
-    x: -Math.sin(angle) * speed * direction,
-    y: Math.cos(angle) * speed * direction,
-  };
-}
-
-function createSpawnedAsteroid(id: string): Body {
-  const centerX = CANVAS_WIDTH / 2;
-  const centerY = CANVAS_HEIGHT / 2;
-
-  const angle = Math.random() * Math.PI * 2;
-  const distanceFromCenter = 260 + Math.random() * 180;
-
-  const position = {
-    x: centerX + Math.cos(angle) * distanceFromCenter,
-    y: centerY + Math.sin(angle) * distanceFromCenter,
-  };
-
-  const direction = Math.random() > 0.5 ? 1 : -1;
-  const speed = 1.2 + Math.random() * 1.5;
-
-  const velocity = createTangentialVelocity(angle, speed, direction);
-
-  const mass = 2 + Math.random() * 6;
-  const radius = Math.sqrt(mass) * 2.2;
-
-  return {
-    id,
-    position,
-    velocity,
-    mass,
-    radius,
-    color: pickRandomColor(ASTEROID_COLORS),
-    trail: [],
-  };
-}
-
-function createSpawnedOrbitingBody(id: string): Body {
-  const centerX = CANVAS_WIDTH / 2;
-  const centerY = CANVAS_HEIGHT / 2;
-
-  const angle = Math.random() * Math.PI * 2;
-  const distanceFromCenter = 170 + Math.random() * 170;
-
-  const position = {
-    x: centerX + Math.cos(angle) * distanceFromCenter,
-    y: centerY + Math.sin(angle) * distanceFromCenter,
-  };
-
-  const direction = Math.random() > 0.5 ? 1 : -1;
-  const speed = 2.0 + Math.random() * 1.0;
-  const velocity = createTangentialVelocity(angle, speed, direction);
-
-  const mass = 8 + Math.random() * 18;
-  const radius = Math.sqrt(mass) * 2.4;
-
-  return {
-    id,
-    position,
-    velocity,
-    mass,
-    radius,
-    color: pickRandomColor(ORBITING_BODY_COLORS),
-    trail: [],
-  };
-}
-
-function createSpawnedHeavyBody(id: string): Body {
-  const centerX = CANVAS_WIDTH / 2;
-  const centerY = CANVAS_HEIGHT / 2;
-
-  const angle = Math.random() * Math.PI * 2;
-  const distanceFromCenter = 300 + Math.random() * 160;
-
-  const position = {
-    x: centerX + Math.cos(angle) * distanceFromCenter,
-    y: centerY + Math.sin(angle) * distanceFromCenter,
-  };
-
-  const direction = Math.random() > 0.5 ? 1 : -1;
-  const speed = 0.7 + Math.random() * 0.8;
-  const velocity = createTangentialVelocity(angle, speed, direction);
-
-  const mass = 80 + Math.random() * 120;
-  const radius = Math.sqrt(mass) * 1.8;
-
-  return {
-    id,
-    position,
-    velocity,
-    mass,
-    radius,
-    color: pickRandomColor(HEAVY_BODY_COLORS),
-    trail: [],
-  };
-}
-
-function createBodyForSpawnMode(mode: SpawnMode, id: string): Body {
-  if (mode === "orbiting-body") {
-    return createSpawnedOrbitingBody(id);
-  }
-
-  if (mode === "heavy-body") {
-    return createSpawnedHeavyBody(id);
-  }
-
-  return createSpawnedAsteroid(id);
-}
 
 export default function App() {
   const [world, setWorld] = useState<WorldState | null>(null);
@@ -200,18 +85,18 @@ export default function App() {
 
       return {
         ...currentWorld,
-        bodies: currentWorld.bodies.filter(
-          (body) => !body.id.startsWith("asteroid"),
-        ),
+        bodies: currentWorld.bodies.filter((body) => body.kind !== "asteroid"),
       };
     });
 
     setSelectedBodyId((currentSelectedBodyId) => {
-      if (!currentSelectedBodyId) return null;
+      if (!currentSelectedBodyId || !world) return null;
 
-      return currentSelectedBodyId.startsWith("asteroid")
-        ? null
-        : currentSelectedBodyId;
+      const selectedBody = world.bodies.find(
+        (body) => body.id === currentSelectedBodyId,
+      );
+
+      return selectedBody?.kind === "asteroid" ? null : currentSelectedBodyId;
     });
   }
 
@@ -232,7 +117,12 @@ export default function App() {
     setWorld((currentWorld) => {
       if (!currentWorld) return currentWorld;
 
-      const body = createBodyForSpawnMode(spawnMode, bodyId);
+      const body = createBodyForSpawnMode(
+        spawnMode,
+        bodyId,
+        CANVAS_WIDTH,
+        CANVAS_HEIGHT,
+      );
 
       return {
         ...currentWorld,
@@ -246,24 +136,24 @@ export default function App() {
   const selectedBody =
     world?.bodies.find((body) => body.id === selectedBodyId) ?? null;
 
-  const selectedBodySpeed = selectedBody
-    ? Math.sqrt(
-        selectedBody.velocity.x * selectedBody.velocity.x +
-          selectedBody.velocity.y * selectedBody.velocity.y,
-      )
-    : 0;
+  const selectedBodySpeed = selectedBody ? getBodySpeed(selectedBody) : 0;
   if (!world) {
     return <main className="page">Creating universe...</main>;
   }
 
+  const totalMass = getTotalMass(world);
+  const averageSpeed = getAverageSpeed(world);
+  const heaviestBody = getHeaviestBody(world);
+  const fastestBody = getFastestBody(world);
+
   return (
     <main className="page">
       <section className="hero">
-        <p className="eyebrow">WorldSim / Genesis Build 007</p>
-        <h1>Sandbox Controls</h1>
+        <p className="eyebrow">WorldSim / Genesis Build 008</p>
+        <h1>{world.name}</h1>
         <p>
-          Bodies move, collide, merge, leave trails, can be spawned in different
-          modes, and can now be removed from the sandbox.
+          A live gravity sandbox for modeling bodies, collisions, trails, and
+          emerging orbital systems.
         </p>
       </section>
 
@@ -326,11 +216,27 @@ export default function App() {
             />
           </label>
           <div className="selected-body-panel">
+            <h3>Simulation State</h3>
+
+            <div className="selected-body-details">
+              <span>status: {world.isPaused ? "paused" : "running"}</span>
+              <span>scale: {world.scale}</span>
+              <span>body count: {world.bodies.length}</span>
+              <span>total mass: {totalMass.toFixed(1)}</span>
+              <span>average speed: {averageSpeed.toFixed(2)}</span>
+              <span>heaviest: {heaviestBody ? heaviestBody.id : "none"}</span>
+              <span>fastest: {fastestBody ? fastestBody.id : "none"}</span>
+              <span>trails: {world.showTrails ? "visible" : "hidden"}</span>
+            </div>
+          </div>
+          <div className="selected-body-panel">
             <h3>Selected Body</h3>
 
             {selectedBody ? (
               <div className="selected-body-details">
-                <strong>{selectedBody.id}</strong>
+                <strong>{selectedBody.name}</strong>
+                <span>id: {selectedBody.id}</span>
+                <span>kind: {selectedBody.kind}</span>
                 <span>mass: {selectedBody.mass.toFixed(1)}</span>
                 <span>radius: {selectedBody.radius.toFixed(1)}</span>
                 <span>
@@ -358,8 +264,9 @@ export default function App() {
                 }`}
                 onClick={() => setSelectedBodyId(body.id)}
               >
-                <strong>{body.id}</strong>
-                <span>mass: {body.mass}</span>
+                <strong>{body.name}</strong>
+                <span>kind: {body.kind}</span>
+                <span>mass: {body.mass.toFixed(1)}</span>
                 <span>
                   x: {body.position.x.toFixed(1)}, {body.position.y.toFixed(1)}
                 </span>
