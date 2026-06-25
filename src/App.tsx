@@ -10,6 +10,9 @@ import {
 } from "./sim/selectors";
 import { createBodyForSpawnMode, type SpawnMode } from "./sim/spawnBodies";
 import type { WorldState } from "./sim/types";
+import { createLivingCommonwealthSeed } from "./society/createSociety";
+import { updateSociety } from "./society/updateSociety";
+import type { Society } from "./society/types";
 
 const CANVAS_WIDTH = 900;
 const CANVAS_HEIGHT = 600;
@@ -18,9 +21,13 @@ export default function App() {
   const [world, setWorld] = useState<WorldState | null>(null);
   const [selectedBodyId, setSelectedBodyId] = useState<string | null>(null);
   const [spawnMode, setSpawnMode] = useState<SpawnMode>("asteroid");
+  const [society, setSociety] = useState<Society | null>(null);
 
   useEffect(() => {
-    setWorld(createInitialWorld(CANVAS_WIDTH, CANVAS_HEIGHT));
+    const initialWorld = createInitialWorld(CANVAS_WIDTH, CANVAS_HEIGHT);
+
+    setWorld(initialWorld);
+    setSociety(createLivingCommonwealthSeed("planet-1"));
   }, []);
 
   useEffect(() => {
@@ -36,7 +43,10 @@ export default function App() {
   }, [world, selectedBodyId]);
 
   function resetWorld() {
-    setWorld(createInitialWorld(CANVAS_WIDTH, CANVAS_HEIGHT));
+    const initialWorld = createInitialWorld(CANVAS_WIDTH, CANVAS_HEIGHT);
+
+    setWorld(initialWorld);
+    setSociety(createLivingCommonwealthSeed("planet-1"));
     setSelectedBodyId(null);
   }
 
@@ -133,6 +143,14 @@ export default function App() {
     setSelectedBodyId(bodyId);
   }
 
+  function advanceSocietyTurn() {
+    setSociety((currentSociety) => {
+      if (!currentSociety) return currentSociety;
+
+      return updateSociety(currentSociety);
+    });
+  }
+
   const selectedBody =
     world?.bodies.find((body) => body.id === selectedBodyId) ?? null;
 
@@ -149,11 +167,11 @@ export default function App() {
   return (
     <main className="page">
       <section className="hero">
-        <p className="eyebrow">WorldSim / Genesis Build 008</p>
+        <p className="eyebrow">WorldSim / Genesis Build 009</p>
         <h1>{world.name}</h1>
         <p>
           A live gravity sandbox for modeling bodies, collisions, trails, and
-          emerging orbital systems.
+          emerging orbital systems. NEW -- Commonwealth Society.
         </p>
       </section>
 
@@ -230,6 +248,45 @@ export default function App() {
             </div>
           </div>
           <div className="selected-body-panel">
+            <h3>Society Seed</h3>
+
+            {society ? (
+              <div className="selected-body-details">
+                <strong>{society.name}</strong>
+                <span>turn: {society.turn}</span>
+                <span>home body: {society.homeBodyId ?? "unattached"}</span>
+                <span>policy: {society.policy}</span>
+                <span>population: {society.population.toLocaleString()}</span>
+                <span>food: {society.resources.food.toFixed(0)}</span>
+                <span>housing: {society.resources.housing.toFixed(0)}</span>
+                <span>energy: {society.resources.energy.toFixed(0)}</span>
+                <span>health: {society.wellbeing.health.toFixed(0)}</span>
+                <span>education: {society.wellbeing.education.toFixed(0)}</span>
+                <span>
+                  social trust: {society.wellbeing.socialTrust.toFixed(0)}
+                </span>
+                <span>
+                  productivity: {society.wellbeing.productivity.toFixed(0)}
+                </span>
+                <span>presence: {society.wellbeing.presence.toFixed(0)}</span>
+                <span>
+                  foundation:{" "}
+                  {Math.min(
+                    society.resources.food / society.population,
+                    society.resources.housing / society.population,
+                    society.resources.energy / society.population / 0.85,
+                  ).toFixed(2)}
+                </span>
+              </div>
+            ) : (
+              <p>No society loaded.</p>
+            )}
+
+            <button onClick={advanceSocietyTurn} disabled={!society}>
+              Advance Society Turn
+            </button>
+          </div>
+          <div className="selected-body-panel">
             <h3>Selected Body</h3>
 
             {selectedBody ? (
@@ -237,6 +294,9 @@ export default function App() {
                 <strong>{selectedBody.name}</strong>
                 <span>id: {selectedBody.id}</span>
                 <span>kind: {selectedBody.kind}</span>
+                {society?.homeBodyId === selectedBody.id && (
+                  <span>society: {society.name}</span>
+                )}
                 <span>mass: {selectedBody.mass.toFixed(1)}</span>
                 <span>radius: {selectedBody.radius.toFixed(1)}</span>
                 <span>
