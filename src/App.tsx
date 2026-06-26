@@ -167,11 +167,11 @@ export default function App() {
   return (
     <main className="page">
       <section className="hero">
-        <p className="eyebrow">WorldSim / Genesis Build 009</p>
+        <p className="eyebrow">WorldSim / Genesis Build 010</p>
         <h1>{world.name}</h1>
         <p>
-          A live gravity sandbox for modeling bodies, collisions, trails, and
-          emerging orbital systems. NEW -- Commonwealth Society.
+          A living gravity sandbox where bodies orbit, collide, merge. and host
+          the first seeds of civilization.
         </p>
       </section>
 
@@ -182,6 +182,7 @@ export default function App() {
             setWorld={setWorld}
             selectedBodyId={selectedBodyId}
             onSelectBody={setSelectedBodyId}
+            society={society}
           />
         </div>
 
