@@ -170,7 +170,7 @@ export default function App() {
         <p className="eyebrow">WorldSim / Genesis Build 010</p>
         <h1>{world.name}</h1>
         <p>
-          A living gravity sandbox where bodies orbit, collide, merge. and host
+          A living gravity sandbox where bodies orbit, collide, merge, and host
           the first seeds of civilization.
         </p>
       </section>
