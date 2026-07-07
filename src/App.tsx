@@ -9,7 +9,8 @@ import {
   getTotalMass,
 } from "./sim/selectors";
 import { createBodyForSpawnMode, type SpawnMode } from "./sim/spawnBodies";
-import type { WorldState } from "./sim/types";
+import type { BodyMergeEvent, WorldState } from "./sim/types";
+import type { WorldEvent } from "./events/types";
 import { createLivingCommonwealthSeed } from "./society/createSociety";
 import { updateSociety } from "./society/updateSociety";
 import type { Society } from "./society/types";
@@ -22,6 +23,7 @@ export default function App() {
   const [selectedBodyId, setSelectedBodyId] = useState<string | null>(null);
   const [spawnMode, setSpawnMode] = useState<SpawnMode>("asteroid");
   const [society, setSociety] = useState<Society | null>(null);
+  const [worldEvents, setWorldEvents] = useState<WorldEvent[]>([]);
 
   useEffect(() => {
     const initialWorld = createInitialWorld(CANVAS_WIDTH, CANVAS_HEIGHT);
@@ -42,12 +44,42 @@ export default function App() {
     }
   }, [world, selectedBodyId]);
 
+  function addWorldEvents(events: Array<Omit<WorldEvent, "id" | "createdAt">>) {
+    setWorldEvents((currentEvents) => {
+      const newEvents = events.map((event) => ({
+        ...event,
+        id: `${event.kind}-${Date.now()}-${Math.random()
+          .toString(36)
+          .slice(2)}`,
+        createdAt: Date.now(),
+      }));
+
+      return [...newEvents, ...currentEvents].slice(0, 12);
+    });
+  }
+
+  function getSocietyFoundationScore(currentSociety: Society): number {
+    return Math.min(
+      currentSociety.resources.food / currentSociety.population,
+      currentSociety.resources.housing / currentSociety.population,
+      currentSociety.resources.energy / currentSociety.population / 0.85,
+    );
+  }
+
   function resetWorld() {
     const initialWorld = createInitialWorld(CANVAS_WIDTH, CANVAS_HEIGHT);
 
     setWorld(initialWorld);
     setSociety(createLivingCommonwealthSeed("planet-1"));
     setSelectedBodyId(null);
+
+    addWorldEvents([
+      {
+        kind: "system",
+        importance: "medium",
+        message: "Genesis System was reset.",
+      },
+    ]);
   }
 
   function togglePause() {
@@ -75,6 +107,9 @@ export default function App() {
   function deleteSelectedBody() {
     if (!selectedBodyId) return;
 
+    const bodyToDelete =
+      world?.bodies.find((body) => body.id === selectedBodyId) ?? null;
+
     setWorld((currentWorld) => {
       if (!currentWorld) return currentWorld;
 
@@ -87,9 +122,37 @@ export default function App() {
     });
 
     setSelectedBodyId(null);
+
+    if (bodyToDelete) {
+      addWorldEvents([
+        {
+          kind: "user-action",
+          importance: "medium",
+          message: `Deleted ${bodyToDelete.name}.`,
+        },
+      ]);
+
+      if (society?.homeBodyId === bodyToDelete.id) {
+        setSociety({
+          ...society,
+          homeBodyId: null,
+        });
+
+        addWorldEvents([
+          {
+            kind: "warning",
+            importance: "high",
+            message: `${society.name} lost its home world.`,
+          },
+        ]);
+      }
+    }
   }
 
   function clearAsteroids() {
+    const asteroidCount =
+      world?.bodies.filter((body) => body.kind === "asteroid").length ?? 0;
+
     setWorld((currentWorld) => {
       if (!currentWorld) return currentWorld;
 
@@ -105,6 +168,14 @@ export default function App() {
       const selectedBody = world.bodies.find(
         (body) => body.id === currentSelectedBodyId,
       );
+
+      addWorldEvents([
+        {
+          kind: "user-action",
+          importance: "medium",
+          message: `Cleared ${asteroidCount} asteroid${asteroidCount === 1 ? "" : "s"}.`,
+        },
+      ]);
 
       return selectedBody?.kind === "asteroid" ? null : currentSelectedBodyId;
     });
@@ -141,14 +212,117 @@ export default function App() {
     });
 
     setSelectedBodyId(bodyId);
+
+    addWorldEvents([
+      {
+        kind: "user-action",
+        importance: "low",
+        message: `Spawned ${spawnMode.replace("-", " ")} into the system.`,
+      },
+    ]);
   }
 
   function advanceSocietyTurn() {
-    setSociety((currentSociety) => {
-      if (!currentSociety) return currentSociety;
+    if (!society) return;
 
-      return updateSociety(currentSociety);
-    });
+    const nextSociety = updateSociety(society);
+
+    const previousFoundation = getSocietyFoundationScore(society);
+    const nextFoundation = getSocietyFoundationScore(nextSociety);
+    const populationChange = nextSociety.population - society.population;
+
+    setSociety(nextSociety);
+
+    const societyEvents: Array<Omit<WorldEvent, "id" | "createdAt">> = [
+      {
+        kind: "society",
+        importance: "low",
+        message: `${nextSociety.name} advanced to turn ${nextSociety.turn}.`,
+      },
+    ];
+
+    if (populationChange > 0) {
+      societyEvents.push({
+        kind: "society",
+        importance: "medium",
+        message: `${nextSociety.name} grew by ${populationChange.toLocaleString()} people.`,
+      });
+    }
+
+    if (populationChange < 0) {
+      societyEvents.push({
+        kind: "warning",
+        importance: "medium",
+        message: `${nextSociety.name} declined by ${Math.abs(
+          populationChange,
+        ).toLocaleString()} people.`,
+      });
+    }
+
+    if (previousFoundation < 1 && nextFoundation >= 1) {
+      societyEvents.push({
+        kind: "society",
+        importance: "high",
+        message: `${nextSociety.name} achieved a stable foundation.`,
+      });
+    }
+
+    if (previousFoundation >= 1 && nextFoundation < 1) {
+      societyEvents.push({
+        kind: "warning",
+        importance: "high",
+        message: `${nextSociety.name}'s foundation has become unstable.`,
+      });
+    }
+
+    addWorldEvents(societyEvents);
+  }
+
+  function handleMergeEvents(mergeEvents: BodyMergeEvent[]) {
+    if (mergeEvents.length === 0) return;
+
+    const eventMessages: Array<Omit<WorldEvent, "id" | "createdAt">> =
+      mergeEvents.map((mergeEvent) => ({
+        kind: "physics",
+        importance: "medium",
+        message: `${mergeEvent.bodyAName} and ${mergeEvent.bodyBName} merged into ${mergeEvent.mergedBodyName}.`,
+      }));
+
+    if (society?.homeBodyId) {
+      for (const mergeEvent of mergeEvents) {
+        const homeWorldWasInvolved =
+          mergeEvent.bodyAId === society.homeBodyId ||
+          mergeEvent.bodyBId === society.homeBodyId;
+
+        if (!homeWorldWasInvolved) continue;
+
+        if (mergeEvent.mergedKind === "planet") {
+          setSociety({
+            ...society,
+            homeBodyId: mergeEvent.mergedBodyId,
+          });
+
+          eventMessages.push({
+            kind: "warning",
+            importance: "high",
+            message: `${society.name}'s home world survived an impact and is now ${mergeEvent.mergedBodyName}.`,
+          });
+        } else {
+          setSociety({
+            ...society,
+            homeBodyId: null,
+          });
+
+          eventMessages.push({
+            kind: "warning",
+            importance: "high",
+            message: `${society.name}'s home world was destroyed in a collision.`,
+          });
+        }
+      }
+    }
+
+    addWorldEvents(eventMessages);
   }
 
   const selectedBody =
@@ -167,7 +341,7 @@ export default function App() {
   return (
     <main className="page">
       <section className="hero">
-        <p className="eyebrow">WorldSim / Genesis Build 010</p>
+        <p className="eyebrow">WorldSim / Genesis Build 011</p>
         <h1>{world.name}</h1>
         <p>
           A living gravity sandbox where bodies orbit, collide, merge, and host
@@ -183,6 +357,7 @@ export default function App() {
             selectedBodyId={selectedBodyId}
             onSelectBody={setSelectedBodyId}
             society={society}
+            onMergeEvents={handleMergeEvents}
           />
         </div>
 
@@ -247,6 +422,25 @@ export default function App() {
               <span>fastest: {fastestBody ? fastestBody.id : "none"}</span>
               <span>trails: {world.showTrails ? "visible" : "hidden"}</span>
             </div>
+          </div>
+          <div className="selected-body-panel world-chronicle">
+            <h3>World Chronicle</h3>
+
+            {worldEvents.length > 0 ? (
+              <div className="event-list">
+                {worldEvents.map((event) => (
+                  <article
+                    key={event.id}
+                    className={`event-item event-item-${event.importance}`}
+                  >
+                    <span className="event-kind">{event.kind}</span>
+                    <p>{event.message}</p>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <p>No major events yet.</p>
+            )}
           </div>
           <div className="selected-body-panel">
             <h3>Society Seed</h3>

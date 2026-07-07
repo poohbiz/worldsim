@@ -1,10 +1,10 @@
-import type { Body } from "./types";
+import type { Body, BodyMergeEvent, PhysicsUpdateResult } from "./types";
 
 const G = 0.08;
 const SOFTENING = 25;
 const MAX_TRAIL_LENGTH = 120;
 
-export function updateBodies(bodies: Body[], dt: number): Body[] {
+export function updateBodies(bodies: Body[], dt: number): PhysicsUpdateResult {
   let updatedBodies = bodies.map((body) => ({
     ...body,
     position: { ...body.position },
@@ -50,13 +50,14 @@ export function updateBodies(bodies: Body[], dt: number): Body[] {
     }
   }
 
-  updatedBodies = mergeCollidingBodies(updatedBodies);
+  const mergeResult = mergeCollidingBodies(updatedBodies);
 
-  return updatedBodies;
+  return mergeResult;
 }
 
-function mergeCollidingBodies(bodies: Body[]): Body[] {
+function mergeCollidingBodies(bodies: Body[]): PhysicsUpdateResult {
   const remainingBodies = [...bodies];
+  const mergeEvents: BodyMergeEvent[] = [];
   let didMerge = true;
 
   while (didMerge) {
@@ -69,10 +70,12 @@ function mergeCollidingBodies(bodies: Body[]): Body[] {
 
         if (areBodiesColliding(bodyA, bodyB)) {
           const mergedBody = mergeBodies(bodyA, bodyB);
+          const mergeEvent = createMergeEvent(bodyA, bodyB, mergedBody);
 
           remainingBodies.splice(j, 1);
           remainingBodies.splice(i, 1);
           remainingBodies.push(mergedBody);
+          mergeEvents.push(mergeEvent);
 
           didMerge = true;
           break;
@@ -83,7 +86,10 @@ function mergeCollidingBodies(bodies: Body[]): Body[] {
     }
   }
 
-  return remainingBodies;
+  return {
+    bodies: remainingBodies,
+    mergeEvents,
+  };
 }
 
 function areBodiesColliding(bodyA: Body, bodyB: Body): boolean {
@@ -132,6 +138,25 @@ function mergeBodies(bodyA: Body, bodyB: Body): Body {
     radius,
     color: largerBody.color,
     trail,
+  };
+}
+
+function createMergeEvent(
+  bodyA: Body,
+  bodyB: Body,
+  mergedBody: Body,
+): BodyMergeEvent {
+  return {
+    id: `merge-${bodyA.id}-${bodyB.id}-${mergedBody.id}`,
+    bodyAId: bodyA.id,
+    bodyAName: bodyA.name,
+    bodyBId: bodyB.id,
+    bodyBName: bodyB.name,
+    mergedBodyId: mergedBody.id,
+    mergedBodyName: mergedBody.name,
+    mergedKind: mergedBody.kind,
+    position: { ...mergedBody.position },
+    totalMass: mergedBody.mass,
   };
 }
 

@@ -23,6 +23,24 @@ export type Body = {
   trail: Vector2[];
 };
 
+export type BodyMergeEvent = {
+  id: string;
+  bodyAId: string;
+  bodyAName: string;
+  bodyBId: string;
+  bodyBName: string;
+  mergedBodyId: string;
+  mergedBodyName: string;
+  mergedKind: BodyKind;
+  position: Vector2;
+  totalMass: number;
+};
+
+export type PhysicsUpdateResult = {
+  bodies: Body[];
+  mergeEvents: BodyMergeEvent[];
+};
+
 export type WorldScale = "sandbox" | "star-system" | "galaxy" | "universe";
 
 export type WorldState = {

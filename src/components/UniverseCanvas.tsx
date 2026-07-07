@@ -5,7 +5,7 @@ import {
   type PointerEvent,
   type SetStateAction,
 } from "react";
-import type { WorldState } from "../sim/types";
+import type { BodyMergeEvent, WorldState } from "../sim/types";
 import { updateBodies } from "../sim/physics";
 import type { Society } from "../society/types";
 
@@ -15,6 +15,7 @@ type UniverseCanvasProps = {
   selectedBodyId: string | null;
   onSelectBody: (bodyId: string | null) => void;
   society: Society | null;
+  onMergeEvents: (mergeEvents: BodyMergeEvent[]) => void;
 };
 
 export function UniverseCanvas({
@@ -23,6 +24,7 @@ export function UniverseCanvas({
   selectedBodyId,
   onSelectBody,
   society,
+  onMergeEvents,
 }: UniverseCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const animationFrameRef = useRef<number | null>(null);
@@ -30,10 +32,14 @@ export function UniverseCanvas({
   const worldRef = useRef<WorldState>(world);
   const selectedBodyIdRef = useRef<string | null>(selectedBodyId);
   const societyRef = useRef<Society | null>(society);
+  const onMergeEventsRef = useRef(onMergeEvents);
+  const handledMergeEventIdsRef = useRef<Set<string>>(new Set());
+  const collisionEffectsRef = useRef<CollisionEffect[]>([]);
 
   worldRef.current = world;
   selectedBodyIdRef.current = selectedBodyId;
   societyRef.current = society;
+  onMergeEventsRef.current = onMergeEvents;
 
   function handleCanvasPointerDown(event: PointerEvent<HTMLCanvasElement>) {
     const canvas = canvasRef.current;
@@ -75,13 +81,41 @@ export function UniverseCanvas({
       setWorld((currentWorld) => {
         if (!currentWorld) return currentWorld;
 
-        const nextBodies = currentWorld.isPaused
-          ? currentWorld.bodies
+        const physicsResult = currentWorld.isPaused
+          ? { bodies: currentWorld.bodies, mergeEvents: [] }
           : updateBodies(currentWorld.bodies, dt * currentWorld.timeScale);
+
+        const newMergeEvents = physicsResult.mergeEvents.filter(
+          (mergeEvent) => {
+            if (handledMergeEventIdsRef.current.has(mergeEvent.id)) {
+              return false;
+            }
+
+            handledMergeEventIdsRef.current.add(mergeEvent.id);
+            return true;
+          },
+        );
+
+        if (newMergeEvents.length > 0) {
+          collisionEffectsRef.current = [
+            ...collisionEffectsRef.current,
+            ...newMergeEvents.map((mergeEvent) => ({
+              id: mergeEvent.id,
+              position: mergeEvent.position,
+              startedAt: currentTime,
+            })),
+          ];
+
+          onMergeEventsRef.current(newMergeEvents);
+        }
+
+        collisionEffectsRef.current = collisionEffectsRef.current.filter(
+          (effect) => currentTime - effect.startedAt < 700,
+        );
 
         const nextWorld = {
           ...currentWorld,
-          bodies: nextBodies,
+          bodies: physicsResult.bodies,
         };
 
         render(
@@ -91,6 +125,7 @@ export function UniverseCanvas({
           selectedBodyIdRef.current,
           societyRef.current,
           currentTime,
+          collisionEffectsRef.current,
         );
 
         return nextWorld;
@@ -118,6 +153,15 @@ export function UniverseCanvas({
   );
 }
 
+type CollisionEffect = {
+  id: string;
+  position: {
+    x: number;
+    y: number;
+  };
+  startedAt: number;
+};
+
 function render(
   context: CanvasRenderingContext2D,
   canvas: HTMLCanvasElement,
@@ -125,6 +169,7 @@ function render(
   selectedBodyId: string | null,
   society: Society | null,
   currentTime: number,
+  collisionEffects: CollisionEffect[],
 ) {
   context.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -138,6 +183,8 @@ function render(
   for (const body of world.bodies) {
     drawBodyGlow(context, body);
   }
+
+  drawCollisionEffects(context, collisionEffects, currentTime);
 
   for (const body of world.bodies) {
     drawBody(context, body);
@@ -276,6 +323,40 @@ function drawBody(
   if (body.id.includes("+m")) {
     drawMergeScar(context, body);
   }
+}
+
+function drawCollisionEffects(
+  context: CanvasRenderingContext2D,
+  collisionEffects: CollisionEffect[],
+  currentTime: number,
+) {
+  const duration = 700;
+
+  for (const effect of collisionEffects) {
+    const elapsed = currentTime - effect.startedAt;
+    const progress = Math.min(elapsed / duration, 1);
+    const alpha = 1 - progress;
+    const radius = 10 + progress * 70;
+
+    context.beginPath();
+    context.arc(effect.position.x, effect.position.y, radius, 0, Math.PI * 2);
+    context.strokeStyle = `rgba(255, 230, 180, ${alpha * 0.75})`;
+    context.lineWidth = 3;
+    context.stroke();
+
+    context.beginPath();
+    context.arc(
+      effect.position.x,
+      effect.position.y,
+      5 + progress * 18,
+      0,
+      Math.PI * 2,
+    );
+    context.fillStyle = `rgba(255, 245, 210, ${alpha * 0.25})`;
+    context.fill();
+  }
+
+  context.lineWidth = 1;
 }
 
 function drawMergeScar(

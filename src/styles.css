@@ -180,6 +180,51 @@ select {
   overflow-wrap: anywhere;
 }
 
+.world-chronicle {
+  max-height: 320px;
+  overflow: hidden;
+}
+
+.event-list {
+  display: grid;
+  gap: 8px;
+  max-height: 260px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.event-item {
+  display: grid;
+  gap: 4px;
+  padding: 8px;
+  border-left: 3px solid rgba(255, 255, 255, 0.22);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.event-item p {
+  margin: 0;
+  color: #dcd7f7;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.event-kind {
+  color: #a899ff;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.event-item-medium {
+  border-left-color: rgba(168, 153, 255, 0.8);
+}
+
+.event-item-high {
+  border-left-color: rgba(255, 190, 120, 0.9);
+}
+
 .body-list {
   display: grid;
   gap: 10px;
