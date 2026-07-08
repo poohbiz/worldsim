@@ -1,6 +1,15 @@
 import type { WorldState } from "./types";
+import { generateBodyName } from "./nameGenerator";
 
 export function createInitialWorld(width: number, height: number): WorldState {
+  const usedNames: string[] = [];
+
+  function claimName(kind: WorldState["bodies"][number]["kind"]): string {
+    const name = generateBodyName(kind, usedNames);
+    usedNames.push(name);
+    return name;
+  }
+
   return {
     id: "genesis-system",
     name: "Genesis System",
@@ -11,7 +20,7 @@ export function createInitialWorld(width: number, height: number): WorldState {
     bodies: [
       {
         id: "star",
-        name: "Central Star",
+        name: claimName("star"),
         kind: "star",
         position: { x: width / 2, y: height / 2 },
         velocity: { x: 0, y: 0 },
@@ -22,7 +31,7 @@ export function createInitialWorld(width: number, height: number): WorldState {
       },
       {
         id: "planet-1",
-        name: "Blue Planet",
+        name: claimName("planet"),
         kind: "planet",
         position: { x: width / 2 + 140, y: height / 2 },
         velocity: { x: 0, y: 2.7 },
@@ -33,7 +42,7 @@ export function createInitialWorld(width: number, height: number): WorldState {
       },
       {
         id: "planet-2",
-        name: "Violet Planet",
+        name: claimName("planet"),
         kind: "planet",
         position: { x: width / 2 - 220, y: height / 2 },
         velocity: { x: 0, y: -2.1 },
@@ -44,7 +53,7 @@ export function createInitialWorld(width: number, height: number): WorldState {
       },
       {
         id: "asteroid-a",
-        name: "Asteroid A",
+        name: claimName("asteroid"),
         kind: "asteroid",
         position: { x: width / 2 + 330, y: height / 2 - 160 },
         velocity: { x: 0.7, y: 1.15 },
@@ -55,7 +64,7 @@ export function createInitialWorld(width: number, height: number): WorldState {
       },
       {
         id: "asteroid-b",
-        name: "Asteroid B",
+        name: claimName("asteroid"),
         kind: "asteroid",
         position: { x: width / 2 + 360, y: height / 2 - 135 },
         velocity: { x: -0.6, y: 0.85 },

@@ -1,4 +1,5 @@
 import type { Body } from "./types";
+import { generateBodyName } from "./nameGenerator";
 
 export type SpawnMode = "asteroid" | "orbiting-body" | "heavy-body";
 
@@ -26,22 +27,29 @@ export function createBodyForSpawnMode(
   id: string,
   canvasWidth: number,
   canvasHeight: number,
+  existingNames: string[],
 ): Body {
   if (mode === "orbiting-body") {
-    return createSpawnedOrbitingBody(id, canvasWidth, canvasHeight);
+    return createSpawnedOrbitingBody(
+      id,
+      canvasWidth,
+      canvasHeight,
+      existingNames,
+    );
   }
 
   if (mode === "heavy-body") {
-    return createSpawnedHeavyBody(id, canvasWidth, canvasHeight);
+    return createSpawnedHeavyBody(id, canvasWidth, canvasHeight, existingNames);
   }
 
-  return createSpawnedAsteroid(id, canvasWidth, canvasHeight);
+  return createSpawnedAsteroid(id, canvasWidth, canvasHeight, existingNames);
 }
 
 function createSpawnedAsteroid(
   id: string,
   canvasWidth: number,
   canvasHeight: number,
+  existingNames: string[],
 ): Body {
   const centerX = canvasWidth / 2;
   const centerY = canvasHeight / 2;
@@ -63,7 +71,7 @@ function createSpawnedAsteroid(
 
   return {
     id,
-    name: "Asteroid",
+    name: generateBodyName("asteroid", existingNames),
     kind: "asteroid",
     position,
     velocity,
@@ -78,6 +86,7 @@ function createSpawnedOrbitingBody(
   id: string,
   canvasWidth: number,
   canvasHeight: number,
+  existingNames: string[],
 ): Body {
   const centerX = canvasWidth / 2;
   const centerY = canvasHeight / 2;
@@ -99,7 +108,7 @@ function createSpawnedOrbitingBody(
 
   return {
     id,
-    name: "Orbiting Body",
+    name: generateBodyName("planet", existingNames),
     kind: "planet",
     position,
     velocity,
@@ -114,6 +123,7 @@ function createSpawnedHeavyBody(
   id: string,
   canvasWidth: number,
   canvasHeight: number,
+  existingNames: string[],
 ): Body {
   const centerX = canvasWidth / 2;
   const centerY = canvasHeight / 2;
@@ -135,7 +145,7 @@ function createSpawnedHeavyBody(
 
   return {
     id,
-    name: "Heavy Body",
+    name: generateBodyName("star", existingNames),
     kind: "star",
     position,
     velocity,

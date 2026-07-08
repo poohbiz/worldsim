@@ -40,9 +40,34 @@ select {
     #03040a;
 }
 
-.hero {
-  max-width: 900px;
-  margin: 0 auto 24px;
+.mission-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: end;
+  max-width: 1500px;
+  margin: 0 auto 18px;
+}
+
+.mission-header h1 {
+  margin: 0;
+  font-size: clamp(1.8rem, 4vw, 3rem);
+}
+
+.mission-status {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.mission-status span {
+  padding: 7px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  color: #dcd7f7;
+  background: rgba(255, 255, 255, 0.06);
+  font-size: 0.8rem;
 }
 
 .eyebrow {
@@ -58,21 +83,19 @@ h1 {
   font-size: clamp(2.2rem, 5vw, 4rem);
 }
 
-.hero p {
-  color: #c9c2e8;
-  max-width: 650px;
-  line-height: 1.6;
-}
-
 .sim-layout {
   display: grid;
-  grid-template-columns: minmax(0, 900px) minmax(0, 280px);
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 380px);
   gap: 20px;
-  justify-content: center;
   align-items: start;
+  max-width: 1500px;
+  margin: 0 auto;
 }
 
 .canvas-shell {
+  position: sticky;
+  top: 20px;
+  align-self: start;
   border: 1px solid rgba(255, 255, 255, 0.1);
   padding: 12px;
   border-radius: 24px;
@@ -90,6 +113,8 @@ canvas {
 
 .control-panel {
   min-width: 0;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
   border: 1px solid rgba(255, 255, 255, 0.1);
   padding: 18px;
   border-radius: 24px;
@@ -180,6 +205,29 @@ select {
   overflow-wrap: anywhere;
 }
 
+.rename-form {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.rename-form label {
+  margin: 0;
+}
+
+.rename-form input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  color: #f4f1ff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.rename-form button {
+  margin-bottom: 0;
+}
+
 .world-chronicle {
   max-height: 320px;
   overflow: hidden;
@@ -264,7 +312,29 @@ select {
 }
 
 @media (max-width: 1050px) {
+  .page {
+    padding: 18px;
+  }
+
+  .mission-header {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .mission-status {
+    justify-content: flex-start;
+  }
+
   .sim-layout {
     grid-template-columns: 1fr;
+  }
+
+  .canvas-shell {
+    position: static;
+  }
+
+  .control-panel {
+    max-height: none;
+    overflow-y: visible;
   }
 }

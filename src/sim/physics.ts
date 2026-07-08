@@ -1,4 +1,5 @@
 import type { Body, BodyMergeEvent, PhysicsUpdateResult } from "./types";
+import { createMergedBodyName } from "./nameGenerator";
 
 const G = 0.08;
 const SOFTENING = 25;
@@ -130,7 +131,7 @@ function mergeBodies(bodyA: Body, bodyB: Body): Body {
 
   return {
     id: createMergedId(largerBody, totalMass),
-    name: createMergedName(largerBody, totalMass),
+    name: createMergedBodyName(bodyA, bodyB),
     kind: largerBody.kind,
     position,
     velocity,
@@ -167,8 +168,4 @@ function getBaseId(id: string): string {
 function createMergedId(largerBody: Body, totalMass: number): string {
   const baseId = getBaseId(largerBody.id);
   return `${baseId}+m${Math.round(totalMass)}`;
-}
-
-function createMergedName(largerBody: Body, totalMass: number): string {
-  return `${largerBody.name} Merged ${Math.round(totalMass)}`;
 }

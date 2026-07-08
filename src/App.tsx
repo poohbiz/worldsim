@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { UniverseCanvas } from "./components/UniverseCanvas";
 import { createInitialWorld } from "./sim/createWorld";
 import {
@@ -15,8 +15,8 @@ import { createLivingCommonwealthSeed } from "./society/createSociety";
 import { updateSociety } from "./society/updateSociety";
 import type { Society } from "./society/types";
 
-const CANVAS_WIDTH = 900;
-const CANVAS_HEIGHT = 600;
+const CANVAS_WIDTH = 1100;
+const CANVAS_HEIGHT = 700;
 
 export default function App() {
   const [world, setWorld] = useState<WorldState | null>(null);
@@ -24,6 +24,10 @@ export default function App() {
   const [spawnMode, setSpawnMode] = useState<SpawnMode>("asteroid");
   const [society, setSociety] = useState<Society | null>(null);
   const [worldEvents, setWorldEvents] = useState<WorldEvent[]>([]);
+  const [renameValue, setRenameValue] = useState("");
+
+  const selectedBody =
+    world?.bodies.find((body) => body.id === selectedBodyId) ?? null;
 
   useEffect(() => {
     const initialWorld = createInitialWorld(CANVAS_WIDTH, CANVAS_HEIGHT);
@@ -43,6 +47,10 @@ export default function App() {
       setSelectedBodyId(null);
     }
   }, [world, selectedBodyId]);
+
+  useEffect(() => {
+    setRenameValue(selectedBody?.name ?? "");
+  }, [selectedBody?.id, selectedBody?.name]);
 
   function addWorldEvents(events: Array<Omit<WorldEvent, "id" | "createdAt">>) {
     setWorldEvents((currentEvents) => {
@@ -102,6 +110,42 @@ export default function App() {
         showTrails: !currentWorld.showTrails,
       };
     });
+  }
+
+  function renameSelectedBody(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!selectedBody) return;
+
+    const trimmedName = renameValue.trim();
+
+    if (!trimmedName) return;
+
+    const oldName = selectedBody.name;
+
+    setWorld((currentWorld) => {
+      if (!currentWorld) return currentWorld;
+
+      return {
+        ...currentWorld,
+        bodies: currentWorld.bodies.map((body) =>
+          body.id === selectedBody.id
+            ? {
+                ...body,
+                name: trimmedName,
+              }
+            : body,
+        ),
+      };
+    });
+
+    addWorldEvents([
+      {
+        kind: "user-action",
+        importance: "medium",
+        message: `${oldName} was renamed ${trimmedName}.`,
+      },
+    ]);
   }
 
   function deleteSelectedBody() {
@@ -169,16 +213,16 @@ export default function App() {
         (body) => body.id === currentSelectedBodyId,
       );
 
-      addWorldEvents([
-        {
-          kind: "user-action",
-          importance: "medium",
-          message: `Cleared ${asteroidCount} asteroid${asteroidCount === 1 ? "" : "s"}.`,
-        },
-      ]);
-
       return selectedBody?.kind === "asteroid" ? null : currentSelectedBodyId;
     });
+
+    addWorldEvents([
+      {
+        kind: "user-action",
+        importance: "medium",
+        message: `Cleared ${asteroidCount} asteroid${asteroidCount === 1 ? "" : "s"}.`,
+      },
+    ]);
   }
 
   function changeTimeScale(value: number) {
@@ -203,6 +247,7 @@ export default function App() {
         bodyId,
         CANVAS_WIDTH,
         CANVAS_HEIGHT,
+        currentWorld.bodies.map((body) => body.name),
       );
 
       return {
@@ -325,9 +370,6 @@ export default function App() {
     addWorldEvents(eventMessages);
   }
 
-  const selectedBody =
-    world?.bodies.find((body) => body.id === selectedBodyId) ?? null;
-
   const selectedBodySpeed = selectedBody ? getBodySpeed(selectedBody) : 0;
   if (!world) {
     return <main className="page">Creating universe...</main>;
@@ -340,13 +382,20 @@ export default function App() {
 
   return (
     <main className="page">
-      <section className="hero">
-        <p className="eyebrow">WorldSim / Genesis Build 011</p>
-        <h1>{world.name}</h1>
-        <p>
-          A living gravity sandbox where bodies orbit, collide, merge, and host
-          the first seeds of civilization.
-        </p>
+      <section className="mission-header">
+        <div>
+          <p className="eyebrow">WorldSim / Genesis Build 012</p>
+          <h1>{world.name}</h1>
+        </div>
+
+        <div className="mission-status">
+          <span>{world.isPaused ? "Paused" : "Running"}</span>
+          <span>{world.scale}</span>
+          <span>{world.bodies.length} bodies</span>
+          <span>
+            {society?.homeBodyId ? "Society active" : "Society unattached"}
+          </span>
+        </div>
       </section>
 
       <section className="sim-layout">
@@ -503,13 +552,27 @@ export default function App() {
                   {selectedBody.velocity.y.toFixed(2)}
                 </span>
                 <span>speed: {selectedBodySpeed.toFixed(2)}</span>
+
+                <form className="rename-form" onSubmit={renameSelectedBody}>
+                  <label>
+                    Rename Body
+                    <input
+                      type="text"
+                      value={renameValue}
+                      onChange={(event) => setRenameValue(event.target.value)}
+                      placeholder="Enter a world name"
+                    />
+                  </label>
+
+                  <button type="submit">Rename Selected Body</button>
+                </form>
               </div>
             ) : (
               <p>Click a body on the canvas or in the list.</p>
             )}
           </div>
           <div className="body-list">
-            <h3>Bodies</h3>
+            <h3>World Directory</h3>
             {world.bodies.map((body) => (
               <button
                 key={body.id}
@@ -520,11 +583,11 @@ export default function App() {
                 onClick={() => setSelectedBodyId(body.id)}
               >
                 <strong>{body.name}</strong>
-                <span>kind: {body.kind}</span>
+                <span>{body.kind}</span>
                 <span>mass: {body.mass.toFixed(1)}</span>
-                <span>
-                  x: {body.position.x.toFixed(1)}, {body.position.y.toFixed(1)}
-                </span>
+                {society?.homeBodyId === body.id && (
+                  <span>civilization: active</span>
+                )}
               </button>
             ))}
           </div>
