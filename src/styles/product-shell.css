@@ -1,0 +1,240 @@
+.product-page {
+  min-height: 100vh;
+  padding: 32px;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(
+      circle at 25% 15%,
+      rgba(102, 83, 255, 0.2),
+      transparent 34%
+    ),
+    radial-gradient(
+      circle at 75% 80%,
+      rgba(49, 119, 255, 0.12),
+      transparent 34%
+    ),
+    #03040a;
+}
+
+.home-card,
+.builder-card,
+.world-shell-card {
+  width: min(100%, 760px);
+  padding: clamp(28px, 6vw, 64px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 28px;
+  background: rgba(8, 10, 20, 0.82);
+  box-shadow: 0 30px 100px rgba(0, 0, 0, 0.45);
+}
+
+.eyebrow {
+  margin: 0 0 12px;
+  color: #a899ff;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+h1,
+h2,
+p {
+  margin-top: 0;
+}
+
+h1 {
+  margin-bottom: 18px;
+  font-size: clamp(2.8rem, 9vw, 6rem);
+  line-height: 0.95;
+  letter-spacing: -0.055em;
+}
+
+.hero-copy {
+  max-width: 580px;
+  color: rgba(245, 247, 255, 0.68);
+  font-size: 1.1rem;
+  line-height: 1.7;
+}
+
+.primary-actions,
+.confirmation-actions,
+.world-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.button {
+  min-height: 48px;
+  padding: 0 20px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.button-primary {
+  color: #05060a;
+  background: #f5f7ff;
+}
+
+.button-secondary {
+  border-color: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.button-danger {
+  background: #9e3545;
+}
+
+.world-summary,
+.confirmation-panel,
+.world-identity-panel {
+  margin-top: 28px;
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.world-summary {
+  display: grid;
+  gap: 7px;
+}
+
+.builder-card form {
+  display: grid;
+  gap: 12px;
+  margin: 30px 0;
+}
+
+.builder-card input {
+  width: 100%;
+  min-height: 52px;
+  padding: 0 16px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 14px;
+  color: white;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.error-message {
+  color: #ff9aa9;
+}
+
+.status-message {
+  color: #a9ffd3;
+}
+
+.text-link {
+  color: rgba(245, 247, 255, 0.68);
+}
+
+.living-world-page {
+  display: block;
+}
+
+.world-header {
+  width: min(1400px, 100%);
+  margin: 0 auto 24px;
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: end;
+}
+
+.world-header h1 {
+  margin-bottom: 0;
+}
+
+.world-shell-layout {
+  width: min(1400px, 100%);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+  gap: 20px;
+}
+
+.planet-placeholder {
+  min-height: 620px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 28px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 24px;
+  background: rgba(8, 10, 20, 0.72);
+}
+
+.placeholder-planet {
+  width: min(42vw, 300px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 32% 25%,
+    #a9c8ff,
+    #385c98 33%,
+    #172747 65%,
+    #05070c
+  );
+  box-shadow:
+    inset -45px -30px 60px rgba(0, 0, 0, 0.68),
+    0 0 90px rgba(90, 133, 255, 0.2);
+}
+
+.world-identity-panel {
+  margin-top: 0;
+}
+
+.world-identity-panel dl {
+  display: grid;
+  gap: 18px;
+}
+
+.world-identity-panel dl div {
+  display: grid;
+  gap: 4px;
+}
+
+.world-identity-panel dt {
+  color: rgba(245, 247, 255, 0.48);
+}
+
+.world-identity-panel dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 800px) {
+  .product-page {
+    padding: 18px;
+  }
+
+  .world-header {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .world-shell-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .planet-placeholder {
+    min-height: 440px;
+  }
+
+  .world-header-actions,
+  .primary-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .button {
+    width: 100%;
+  }
+}
