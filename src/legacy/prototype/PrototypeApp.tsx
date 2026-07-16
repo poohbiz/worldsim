@@ -14,11 +14,12 @@ import type { WorldEvent } from "./events/types";
 import { createLivingCommonwealthSeed } from "./society/createSociety";
 import { updateSociety } from "./society/updateSociety";
 import type { Society } from "./society/types";
+import "./prototype.css";
 
 const CANVAS_WIDTH = 1100;
 const CANVAS_HEIGHT = 700;
 
-export default function App() {
+export default function PrototypeApp() {
   const [world, setWorld] = useState<WorldState | null>(null);
   const [selectedBodyId, setSelectedBodyId] = useState<string | null>(null);
   const [spawnMode, setSpawnMode] = useState<SpawnMode>("asteroid");
